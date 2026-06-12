@@ -6,7 +6,7 @@
   <title>Mundopanda 2026 | Clasificación</title>
   <meta name="theme-color" content="#081a3a" />
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=2026-mobilefix-2" />
+  <link rel="stylesheet" href="styles.css?v=2026-compact-1" />
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -15,11 +15,13 @@
       <div class="hero__glow"></div>
       <div class="eyebrow">FIFA World Cup 2026 · Mundopanda</div>
       <h1>Clasificación Mundial 2026</h1>
-      <p class="subtitle">Ranking actualizado del concurso</p>
+      <div class="hero-stats" id="heroStats" aria-label="Resumen del ranking">
+        <article><span>Líder</span><strong>-</strong></article>
+        <article><span>Puntos</span><strong>-</strong></article>
+        <article><span>Participantes</span><strong>-</strong></article>
+      </div>
       <div class="status-pill" id="status">Cargando clasificación...</div>
     </section>
-
-    <section class="summary-grid" id="summaryGrid" aria-label="Resumen"></section>
 
     <section class="podium" id="podium" aria-label="Podio"></section>
 
@@ -52,7 +54,7 @@
       <div id="mobileCards" class="mobile-cards"></div>
     </section>
   </main>
-  <script src="config.js?v=2026-mobilefix-2"></script>
-  <script src="app.js?v=2026-mobilefix-2"></script>
+  <script src="config.js?v=2026-compact-1"></script>
+  <script src="app.js?v=2026-compact-1"></script>
 </body>
 </html>

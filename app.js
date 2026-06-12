@@ -3,7 +3,7 @@ const statusEl = document.getElementById("status");
 const bodyEl = document.getElementById("rankingBody");
 const cardsEl = document.getElementById("mobileCards");
 const podiumEl = document.getElementById("podium");
-const summaryEl = document.getElementById("summaryGrid");
+const heroStatsEl = document.getElementById("heroStats");
 const searchEl = document.getElementById("search");
 
 let players = [];
@@ -98,16 +98,13 @@ function parseClas(workbook) {
 }
 
 function renderSummary(data) {
-  const leader = data[0];
   const total = data.length;
-  const maxPoints = leader?.puntos ?? 0;
-  const avg = total ? Math.round(data.reduce((acc, p) => acc + p.puntos, 0) / total) : 0;
+  const maxPoints = data[0]?.puntos ?? 0;
   const leaders = data.filter(p => p.puntos === maxPoints).map(p => p.jugador).join(" · ");
-  summaryEl.innerHTML = `
+  heroStatsEl.innerHTML = `
     <article><span>Líder${leaders.includes(" · ") ? "es" : ""}</span><strong>${leaders || "-"}</strong></article>
-    <article><span>Puntuación líder</span><strong>${maxPoints}</strong></article>
-    <article><span>Participantes</span><strong>${total}</strong></article>
-    <article><span>Media puntos</span><strong>${avg}</strong></article>
+    <article><span>Puntos</span><strong>${maxPoints}</strong></article>
+    <article><span>Jugadores</span><strong>${total}</strong></article>
   `;
 }
 
