@@ -14,18 +14,33 @@ function n(value) {
 }
 
 function clean(value) {
-  return String(value ?? "").trim();
+  return String(value ?? "").replace(/\s+/g, " ").trim();
 }
 
 function initial(name) {
   return clean(name).slice(0, 1).toUpperCase() || "?";
 }
 
-function medal(pos, index) {
-  if (index === 0) return "🥇";
-  if (index === 1) return "🥈";
-  if (index === 2) return "🥉";
-  return pos;
+function isPlaceholderName(name) {
+  const value = clean(name).toLowerCase();
+  return !value ||
+    value.includes("pegar valores") ||
+    value.includes("nombre j") ||
+    value === "jugador" ||
+    value === "participante";
+}
+
+function rankBadge(pos) {
+  const rank = Number(pos);
+  if (rank === 1) return "🥇";
+  if (rank === 2) return "🥈";
+  if (rank === 3) return "🥉";
+  return String(pos || "-");
+}
+
+function rankText(pos) {
+  const rank = Number(pos);
+  return rank ? `${rank}º` : "-";
 }
 
 function parseClas(workbook) {
@@ -34,22 +49,22 @@ function parseClas(workbook) {
 
   const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "", raw: false });
 
-  // Formato real de la hoja CLAS:
+  // Formato real de CLAS:
   // fila 4: B=Pos, C=Jugador, D=Puntos Totales
-  // datos desde fila 5.
-  // En arrays JS: B=1, C=2, D=3.
+  // datos desde fila 5. En arrays JS: B=1, C=2, D=3.
   const data = [];
   for (let i = 4; i < rows.length; i++) {
     const row = rows[i] || [];
-    const pos = n(row[1]);
     const jugador = clean(row[2]);
     const puntos = n(row[3]);
 
-    if (!jugador) continue;
-    if (/jugador|participante/i.test(jugador)) continue;
+    // La hoja tiene filas de plantilla tipo "Pegar Valores Nombre J19".
+    // No son participantes reales y no deben contarse ni mostrarse.
+    if (isPlaceholderName(jugador)) continue;
 
     data.push({
-      pos,
+      excelOrder: n(row[0]) || i,
+      pos: n(row[1]),
       jugador,
       puntos,
       grupos: n(row[4]),
@@ -71,9 +86,15 @@ function parseClas(workbook) {
   }
 
   if (!data.length) {
-    throw new Error("No he podido leer jugadores desde CLAS. Revisa que haya datos desde la fila 5 y columnas B, C y D.");
+    throw new Error("No he podido leer jugadores reales desde CLAS. Revisa filas desde la 5 y columnas B, C y D.");
   }
-  return data.sort((a, b) => b.puntos - a.puntos || a.pos - b.pos || a.jugador.localeCompare(b.jugador));
+
+  return data.sort((a, b) =>
+    b.puntos - a.puntos ||
+    a.pos - b.pos ||
+    a.excelOrder - b.excelOrder ||
+    a.jugador.localeCompare(b.jugador)
+  );
 }
 
 function renderSummary(data) {
@@ -81,8 +102,9 @@ function renderSummary(data) {
   const total = data.length;
   const maxPoints = leader?.puntos ?? 0;
   const avg = total ? Math.round(data.reduce((acc, p) => acc + p.puntos, 0) / total) : 0;
+  const leaders = data.filter(p => p.puntos === maxPoints).map(p => p.jugador).join(" · ");
   summaryEl.innerHTML = `
-    <article><span>Líder</span><strong>${leader?.jugador ?? "-"}</strong></article>
+    <article><span>Líder${leaders.includes(" · ") ? "es" : ""}</span><strong>${leaders || "-"}</strong></article>
     <article><span>Puntuación líder</span><strong>${maxPoints}</strong></article>
     <article><span>Participantes</span><strong>${total}</strong></article>
     <article><span>Media puntos</span><strong>${avg}</strong></article>
@@ -90,22 +112,26 @@ function renderSummary(data) {
 }
 
 function renderPodium(data) {
-  const top = data.slice(0, 3);
-  podiumEl.innerHTML = top.map((p, i) => `
-    <article class="podium-card podium-card--${i + 1}">
-      <div class="medal">${medal(p.pos, i)}</div>
+  const top = data.filter(p => Number(p.pos) <= 3).slice(0, 6);
+  podiumEl.innerHTML = top.map((p) => `
+    <article class="podium-card podium-card--rank-${p.pos}">
+      <div class="medal">${rankBadge(p.pos)}</div>
       <div class="avatar">${initial(p.jugador)}</div>
       <h3>${p.jugador}</h3>
       <strong>${p.puntos} pts</strong>
-      <span>Posición ${p.pos || i + 1}</span>
+      <span>Posición ${rankText(p.pos)}</span>
     </article>
   `).join("");
 }
 
+function phaseFinal(p) {
+  return p.equiposFinal + p.partidoFinal;
+}
+
 function renderRows(data) {
-  bodyEl.innerHTML = data.map((p, i) => `
+  bodyEl.innerHTML = data.map((p) => `
     <tr>
-      <td class="pos">${medal(p.pos, i)}</td>
+      <td class="pos">${rankBadge(p.pos)}</td>
       <td><div class="player"><span>${initial(p.jugador)}</span>${p.jugador}</div></td>
       <td class="points">${p.puntos}</td>
       <td>${p.grupos}</td>
@@ -113,18 +139,23 @@ function renderRows(data) {
       <td>${p.equipos18 + p.partidos18}</td>
       <td>${p.equipos14 + p.partidos14}</td>
       <td>${p.equipos12 + p.partidos12}</td>
-      <td>${p.equiposFinal + p.partidoFinal}</td>
+      <td>${phaseFinal(p)}</td>
     </tr>
   `).join("");
 
-  cardsEl.innerHTML = data.map((p, i) => `
+  cardsEl.innerHTML = data.map((p) => `
     <article class="mobile-card">
-      <div class="mobile-card__rank">${medal(p.pos, i)}</div>
-      <div>
-        <h3>${p.jugador}</h3>
-        <p>Fase grupos: ${p.grupos} · Final: ${p.equiposFinal + p.partidoFinal}</p>
+      <div class="mobile-card__rank">${rankBadge(p.pos)}<small>${rankText(p.pos)}</small></div>
+      <div class="mobile-card__main">
+        <div class="mobile-card__name"><span>${initial(p.jugador)}</span><h3>${p.jugador}</h3></div>
+        <div class="mini-stats">
+          <span>Grupos <b>${p.grupos}</b></span>
+          <span>1/16 <b>${p.equipos116 + p.partidos116}</b></span>
+          <span>1/8 <b>${p.equipos18 + p.partidos18}</b></span>
+          <span>Final <b>${phaseFinal(p)}</b></span>
+        </div>
       </div>
-      <strong>${p.puntos} pts</strong>
+      <strong>${p.puntos}<small>pts</small></strong>
     </article>
   `).join("");
 }
