@@ -6,6 +6,9 @@ const lockedEl = document.getElementById("locked");
 let selectedFile = null;
 let uploadKey = "";
 
+console.log("VERSION CLAS 2026 v2");
+alert("VERSION CLAS 2026 v2");
+
 function getUploadKey() {
   const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
   const keyFromUrl = hash.get("key");
