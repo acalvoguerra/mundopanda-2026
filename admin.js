@@ -31,6 +31,56 @@ function lockIfNeeded() {
   if (locked) setStatus("Subida bloqueada.", "error");
 }
 
+function normalize(value) {
+  return String(value ?? "").trim();
+}
+
+function normalizeKey(value) {
+  return normalize(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ");
+}
+
+function findHeaderRow(matrix) {
+  for (let r = 0; r < Math.min(matrix.length, 20); r++) {
+    const row = matrix[r].map(normalizeKey);
+    const hasJugador = row.some(c => c.includes("jugador") || c.includes("participante") || c.includes("nombre"));
+    const hasPuntos = row.some(c => c.includes("puntos totales") || c === "puntos" || c.includes("pts") || c.includes("total"));
+    if (hasJugador && hasPuntos) return r;
+  }
+  return -1;
+}
+
+function columnIndex(headers, candidates) {
+  const normalized = headers.map(normalizeKey);
+  for (const candidate of candidates.map(normalizeKey)) {
+    const exact = normalized.findIndex(h => h === candidate);
+    if (exact >= 0) return exact;
+  }
+  for (const candidate of candidates.map(normalizeKey)) {
+    const partial = normalized.findIndex(h => h.includes(candidate));
+    if (partial >= 0) return partial;
+  }
+  return -1;
+}
+
+function validateClassificationSheet(sheet) {
+  const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "", blankrows: false });
+  const headerRowIndex = findHeaderRow(matrix);
+  if (headerRowIndex < 0) throw new Error("No encuentro la fila de cabecera con Jugador y Puntos Totales.");
+
+  const headers = matrix[headerRowIndex];
+  const idxName = columnIndex(headers, ["Jugador", "Participante", "Nombre", "Usuario"]);
+  const idxPoints = columnIndex(headers, ["Puntos Totales", "Puntos", "Total", "Pts"]);
+  if (idxName < 0 || idxPoints < 0) throw new Error("No encuentro columnas de Jugador y Puntos Totales.");
+
+  const validRows = matrix.slice(headerRowIndex + 1).filter(row => normalize(row[idxName]) && !normalizeKey(row[idxName]).includes("total"));
+  if (!validRows.length) throw new Error("La hoja CLAS no contiene jugadores.");
+  return { rows: validRows.length };
+}
+
 async function validateExcel(file) {
   if (!file.name.match(/\.(xlsx|xlsm|xls)$/i)) throw new Error("El fichero debe ser Excel.");
   if (file.size > 8 * 1024 * 1024) throw new Error("El Excel es demasiado grande. Maximo 8 MB.");
@@ -42,16 +92,9 @@ async function validateExcel(file) {
   const buffer = await file.arrayBuffer();
   const workbook = XLSX.read(buffer, { type: "array" });
   const allowed = window.MUNDOPANDA_ALLOWED_SHEETS || [];
-  const sheetName = allowed.find(n => workbook.SheetNames.includes(n)) || workbook.SheetNames[0];
-  const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: "" });
-  if (!rows.length) throw new Error("La hoja de clasificación está vacía.");
-
-  const keys = Object.keys(rows[0]).map(k => k.toLowerCase());
-  const hasName = keys.some(k => ["jugador", "participante", "nombre", "usuario"].some(x => k.includes(x)));
-  const hasPoints = keys.some(k => ["puntos", "pts", "total"].some(x => k.includes(x)));
-  if (!hasName || !hasPoints) throw new Error("No encuentro columnas de jugador/participante y puntos/total.");
-
-  return { sheetName, rows: rows.length };
+  const sheetName = allowed.find(n => workbook.SheetNames.includes(n)) || workbook.SheetNames.find(n => n.toUpperCase() === "CLAS") || workbook.SheetNames[0];
+  const info = validateClassificationSheet(workbook.Sheets[sheetName]);
+  return { sheetName, rows: info.rows };
 }
 
 async function setFile(file) {
@@ -62,7 +105,7 @@ async function setFile(file) {
     const info = await validateExcel(file);
     selectedFile = file;
     uploadBtn.disabled = false;
-    setStatus(`Excel valido: ${file.name} · hoja ${info.sheetName} · ${info.rows} filas`, "ready");
+    setStatus(`Excel valido: ${file.name} · hoja ${info.sheetName} · ${info.rows} jugadores`, "ready");
   } catch (error) {
     selectedFile = null;
     setStatus(error.message, "error");
