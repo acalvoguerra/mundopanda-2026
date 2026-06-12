@@ -3,57 +3,56 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mundopanda 2026 | Clasificacion</title>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
-  <link rel="stylesheet" href="styles.css" />
+  <title>Mundopanda 2026 | Clasificación</title>
+  <meta name="theme-color" content="#081a3a" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="styles.css?v=2026-final-1" />
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
-<body class="site">
-  <div class="orb orb-a"></div>
-  <div class="orb orb-b"></div>
-  <header class="hero">
-    <nav class="topbar">
-      <div class="brand"><span class="ball">◉</span> MUNDOPANDA 2026</div>
-    </nav>
-    <section class="hero-grid">
-      <div>
-        <p class="eyebrow">Concurso Copa Mundial FIFA 2026</p>
-        <h1>Clasificacion mundialista en directo</h1>
-        <p class="subtitle">Ranking actualizado desde el Excel oficial. Podio, puntos por fase y detalle por participante.</p>
-        <div class="stats" id="stats"></div>
-      </div>
-      <div class="trophy-card" aria-hidden="true">
-        <div class="trophy">🏆</div>
-        <div class="ring ring-1"></div>
-        <div class="ring ring-2"></div>
-        <div class="pitch-lines"></div>
-      </div>
-    </section>
-  </header>
-
-  <main class="content">
-    <section class="podium-wrap">
-      <div class="section-title">
-        <p>Top 3</p>
-        <h2>El podio</h2>
-      </div>
-      <div class="podium" id="podium"></div>
+<body>
+  <main class="page-shell">
+    <section class="hero">
+      <div class="hero__glow"></div>
+      <div class="eyebrow">FIFA World Cup 2026 · Mundopanda</div>
+      <h1>Clasificación Mundial 2026</h1>
+      <p class="subtitle">Ranking actualizado del concurso</p>
+      <div class="status-pill" id="status">Cargando clasificación...</div>
     </section>
 
-    <section class="ranking-panel">
-      <div class="panel-head">
+    <section class="summary-grid" id="summaryGrid" aria-label="Resumen"></section>
+
+    <section class="podium" id="podium" aria-label="Podio"></section>
+
+    <section class="ranking-card">
+      <div class="ranking-header">
         <div>
-          <p class="mini">Ranking completo</p>
-          <h2>Clasificacion general</h2>
+          <h2>Clasificación general</h2>
+          <p>Datos leídos desde ranking.xlsx · hoja CLAS</p>
         </div>
-        <input id="search" class="search" placeholder="Buscar participante..." autocomplete="off" />
+        <input id="search" class="search" type="search" placeholder="Buscar jugador..." autocomplete="off" />
       </div>
-      <div id="ranking" class="ranking"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Pos</th>
+              <th>Jugador</th>
+              <th>Puntos</th>
+              <th>F. Grupos</th>
+              <th>1/16</th>
+              <th>1/8</th>
+              <th>1/4</th>
+              <th>1/2</th>
+              <th>Final</th>
+            </tr>
+          </thead>
+          <tbody id="rankingBody"></tbody>
+        </table>
+      </div>
+      <div id="mobileCards" class="mobile-cards"></div>
     </section>
   </main>
-
-  <footer class="footer">Datos cargados desde <strong>ranking.xlsx</strong></footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="app.js"></script>
+  <script src="config.js?v=2026-final-1"></script>
+  <script src="app.js?v=2026-final-1"></script>
 </body>
 </html>

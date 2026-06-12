@@ -1,185 +1,159 @@
-const EXCEL_FILE = "ranking.xlsx?v=" + Date.now();
-const preferredSheetNames = ["CLAS", "WEB_CLASIFICACION", "Clasificacion", "CLASIFICACION", "Clasificación"];
-const rankingEl = document.getElementById("ranking");
+const cfg = window.MUNDOPANDA_CONFIG;
+const statusEl = document.getElementById("status");
+const bodyEl = document.getElementById("rankingBody");
+const cardsEl = document.getElementById("mobileCards");
 const podiumEl = document.getElementById("podium");
-const statsEl = document.getElementById("stats");
+const summaryEl = document.getElementById("summaryGrid");
 const searchEl = document.getElementById("search");
+
 let players = [];
 
-function normalize(value) {
+function n(value) {
+  const parsed = Number(String(value ?? "").replace(",", "."));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function clean(value) {
   return String(value ?? "").trim();
 }
 
-function normalizeKey(value) {
-  return normalize(value)
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ");
+function initial(name) {
+  return clean(name).slice(0, 1).toUpperCase() || "?";
 }
 
-function number(value) {
-  const raw = String(value ?? "0").replace(",", ".").replace(/[^0-9.\-]/g, "");
-  const n = Number(raw || 0);
-  return Number.isFinite(n) ? n : 0;
+function medal(pos, index) {
+  if (index === 0) return "🥇";
+  if (index === 1) return "🥈";
+  if (index === 2) return "🥉";
+  return pos;
 }
 
-function findHeaderRow(matrix) {
-  for (let r = 0; r < Math.min(matrix.length, 20); r++) {
-    const row = matrix[r].map(normalizeKey);
-    const hasJugador = row.some(c => c.includes("jugador") || c.includes("participante") || c.includes("nombre"));
-    const hasPuntos = row.some(c => c.includes("puntos totales") || c === "puntos" || c.includes("pts") || c.includes("total"));
-    if (hasJugador && hasPuntos) return r;
-  }
-  return -1;
-}
+function parseClas(workbook) {
+  const sheet = workbook.Sheets[cfg.SHEET_NAME] || workbook.Sheets["CLAS"] || workbook.Sheets[workbook.SheetNames[0]];
+  if (!sheet) throw new Error("No encuentro la hoja CLAS en el Excel.");
 
-function columnIndex(headers, candidates) {
-  const normalized = headers.map(normalizeKey);
-  for (const candidate of candidates.map(normalizeKey)) {
-    const exact = normalized.findIndex(h => h === candidate);
-    if (exact >= 0) return exact;
-  }
-  for (const candidate of candidates.map(normalizeKey)) {
-    const partial = normalized.findIndex(h => h.includes(candidate));
-    if (partial >= 0) return partial;
-  }
-  return -1;
-}
+  const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "", raw: false });
 
-function extractPlayersFromSheet(sheet) {
-  const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "", blankrows: false });
-  const headerRowIndex = findHeaderRow(matrix);
-  if (headerRowIndex < 0) throw new Error("No encuentro la fila de cabecera con Jugador y Puntos Totales.");
+  // Formato real de la hoja CLAS:
+  // fila 4: B=Pos, C=Jugador, D=Puntos Totales
+  // datos desde fila 5.
+  // En arrays JS: B=1, C=2, D=3.
+  const data = [];
+  for (let i = 4; i < rows.length; i++) {
+    const row = rows[i] || [];
+    const pos = n(row[1]);
+    const jugador = clean(row[2]);
+    const puntos = n(row[3]);
 
-  const headers = matrix[headerRowIndex];
-  const idxPos = columnIndex(headers, ["Pos", "Posicion", "Posición", "Puesto"]);
-  const idxName = columnIndex(headers, ["Jugador", "Participante", "Nombre", "Usuario"]);
-  const idxPoints = columnIndex(headers, ["Puntos Totales", "Puntos", "Total", "Pts"]);
-  const idxGrupos = columnIndex(headers, ["F. Grupos", "Fase Grupos"]);
-  const idxPosGrupos = columnIndex(headers, ["Pos. Grupos", "Pos Grupos"]);
-  const idxEquipos16 = columnIndex(headers, ["Equipos 1/16"]);
-  const idxPartidos16 = columnIndex(headers, ["Partidos 1/16"]);
-  const idxEquipos8 = columnIndex(headers, ["Equipos 1/8"]);
-  const idxPartidos8 = columnIndex(headers, ["Partidos 1/8"]);
-  const idxEquipos4 = columnIndex(headers, ["Equipos 1/4"]);
-  const idxPartidos4 = columnIndex(headers, ["Partidos 1/4"]);
-  const idxEquipos2 = columnIndex(headers, ["Equipos 1/2"]);
-  const idxPartidos2 = columnIndex(headers, ["Partidos 1/2"]);
-  const idxEquipos34 = columnIndex(headers, ["Equipos 3-4"]);
-  const idxEquiposFinal = columnIndex(headers, ["Equipos Final"]);
-  const idxPartido34 = columnIndex(headers, ["Partido 3-4"]);
-  const idxPartidoFinal = columnIndex(headers, ["Partido Final"]);
-  const idxHonor = columnIndex(headers, ["Cuadro de Honor"]);
+    if (!jugador) continue;
+    if (/jugador|participante/i.test(jugador)) continue;
 
-  if (idxName < 0 || idxPoints < 0) {
-    throw new Error("No encuentro columnas de Jugador y Puntos Totales.");
+    data.push({
+      pos,
+      jugador,
+      puntos,
+      grupos: n(row[4]),
+      posGrupos: n(row[5]),
+      equipos116: n(row[6]),
+      partidos116: n(row[7]),
+      equipos18: n(row[8]),
+      partidos18: n(row[9]),
+      equipos14: n(row[10]),
+      partidos14: n(row[11]),
+      equipos12: n(row[12]),
+      partidos12: n(row[13]),
+      equipos3_4: n(row[14]),
+      equiposFinal: n(row[15]),
+      partido3_4: n(row[16]),
+      partidoFinal: n(row[17]),
+      cuadroHonor: n(row[18])
+    });
   }
 
-  return matrix.slice(headerRowIndex + 1)
-    .map((row, i) => ({
-      pos: idxPos >= 0 ? number(row[idxPos]) : i + 1,
-      name: normalize(row[idxName]),
-      points: number(row[idxPoints]),
-      grupos: idxGrupos >= 0 ? number(row[idxGrupos]) : 0,
-      posGrupos: idxPosGrupos >= 0 ? number(row[idxPosGrupos]) : 0,
-      equipos16: idxEquipos16 >= 0 ? number(row[idxEquipos16]) : 0,
-      partidos16: idxPartidos16 >= 0 ? number(row[idxPartidos16]) : 0,
-      equipos8: idxEquipos8 >= 0 ? number(row[idxEquipos8]) : 0,
-      partidos8: idxPartidos8 >= 0 ? number(row[idxPartidos8]) : 0,
-      equipos4: idxEquipos4 >= 0 ? number(row[idxEquipos4]) : 0,
-      partidos4: idxPartidos4 >= 0 ? number(row[idxPartidos4]) : 0,
-      equipos2: idxEquipos2 >= 0 ? number(row[idxEquipos2]) : 0,
-      partidos2: idxPartidos2 >= 0 ? number(row[idxPartidos2]) : 0,
-      equipos34: idxEquipos34 >= 0 ? number(row[idxEquipos34]) : 0,
-      equiposFinal: idxEquiposFinal >= 0 ? number(row[idxEquiposFinal]) : 0,
-      partido34: idxPartido34 >= 0 ? number(row[idxPartido34]) : 0,
-      partidoFinal: idxPartidoFinal >= 0 ? number(row[idxPartidoFinal]) : 0,
-      honor: idxHonor >= 0 ? number(row[idxHonor]) : 0,
-    }))
-    .filter(p => p.name && !normalizeKey(p.name).includes("total"))
-    .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name, "es"))
-    .map((p, i, arr) => ({ ...p, pos: i > 0 && p.points === arr[i - 1].points ? arr[i - 1].pos : i + 1 }));
-}
-
-async function loadExcel() {
-  try {
-    const res = await fetch(EXCEL_FILE, { cache: "no-store" });
-    if (!res.ok) throw new Error("No se encontro ranking.xlsx");
-    const buffer = await res.arrayBuffer();
-    const workbook = XLSX.read(buffer, { type: "array" });
-    const sheetName = preferredSheetNames.find(n => workbook.SheetNames.includes(n)) || workbook.SheetNames[0];
-    players = extractPlayersFromSheet(workbook.Sheets[sheetName]);
-    render(players);
-  } catch (error) {
-    rankingEl.innerHTML = `<div class="empty">No se pudo cargar el Excel: ${error.message}</div>`;
-    console.error(error);
+  if (!data.length) {
+    throw new Error("No he podido leer jugadores desde CLAS. Revisa que haya datos desde la fila 5 y columnas B, C y D.");
   }
+  return data.sort((a, b) => b.puntos - a.puntos || a.pos - b.pos || a.jugador.localeCompare(b.jugador));
 }
 
-function medal(pos) {
-  if (pos === 1) return "🥇";
-  if (pos === 2) return "🥈";
-  if (pos === 3) return "🥉";
-  return `#${pos}`;
-}
-
-function initials(name) {
-  return name.split(/\s+/).slice(0, 2).map(w => w[0]).join("").toUpperCase();
-}
-
-function render(data) {
-  renderStats(data);
-  renderPodium(data.slice(0, 3));
-  renderRanking(data);
-}
-
-function renderStats(data) {
+function renderSummary(data) {
   const leader = data[0];
   const total = data.length;
-  const maxPoints = leader?.points ?? 0;
-  statsEl.innerHTML = `
-    <article><span>${total}</span><small>Participantes</small></article>
-    <article><span>${maxPoints}</span><small>Puntos lider</small></article>
-    <article><span>${leader ? leader.name : "-"}</span><small>Lider actual</small></article>
+  const maxPoints = leader?.puntos ?? 0;
+  const avg = total ? Math.round(data.reduce((acc, p) => acc + p.puntos, 0) / total) : 0;
+  summaryEl.innerHTML = `
+    <article><span>Líder</span><strong>${leader?.jugador ?? "-"}</strong></article>
+    <article><span>Puntuación líder</span><strong>${maxPoints}</strong></article>
+    <article><span>Participantes</span><strong>${total}</strong></article>
+    <article><span>Media puntos</span><strong>${avg}</strong></article>
   `;
 }
 
-function renderPodium(top) {
-  podiumEl.innerHTML = top.map((p, idx) => `
-    <article class="podium-card rank-${idx + 1}">
-      <div class="medal">${medal(p.pos)}</div>
-      <div class="avatar">${initials(p.name)}</div>
-      <h3>${p.name}</h3>
-      <strong>${p.points} pts</strong>
+function renderPodium(data) {
+  const top = data.slice(0, 3);
+  podiumEl.innerHTML = top.map((p, i) => `
+    <article class="podium-card podium-card--${i + 1}">
+      <div class="medal">${medal(p.pos, i)}</div>
+      <div class="avatar">${initial(p.jugador)}</div>
+      <h3>${p.jugador}</h3>
+      <strong>${p.puntos} pts</strong>
+      <span>Posición ${p.pos || i + 1}</span>
     </article>
   `).join("");
 }
 
-function renderRanking(data) {
-  rankingEl.innerHTML = data.map(p => `
-    <article class="player-card">
-      <div class="player-main">
-        <div class="position">${medal(p.pos)}</div>
-        <div class="avatar small">${initials(p.name)}</div>
-        <div><h3>${p.name}</h3><p>${p.points} puntos</p></div>
+function renderRows(data) {
+  bodyEl.innerHTML = data.map((p, i) => `
+    <tr>
+      <td class="pos">${medal(p.pos, i)}</td>
+      <td><div class="player"><span>${initial(p.jugador)}</span>${p.jugador}</div></td>
+      <td class="points">${p.puntos}</td>
+      <td>${p.grupos}</td>
+      <td>${p.equipos116 + p.partidos116}</td>
+      <td>${p.equipos18 + p.partidos18}</td>
+      <td>${p.equipos14 + p.partidos14}</td>
+      <td>${p.equipos12 + p.partidos12}</td>
+      <td>${p.equiposFinal + p.partidoFinal}</td>
+    </tr>
+  `).join("");
+
+  cardsEl.innerHTML = data.map((p, i) => `
+    <article class="mobile-card">
+      <div class="mobile-card__rank">${medal(p.pos, i)}</div>
+      <div>
+        <h3>${p.jugador}</h3>
+        <p>Fase grupos: ${p.grupos} · Final: ${p.equiposFinal + p.partidoFinal}</p>
       </div>
-      <div class="phase-grid">
-        <span><b>${p.grupos}</b><small>F. grupos</small></span>
-        <span><b>${p.posGrupos}</b><small>Pos. grupos</small></span>
-        <span><b>${p.equipos16 + p.partidos16}</b><small>1/16</small></span>
-        <span><b>${p.equipos8 + p.partidos8}</b><small>1/8</small></span>
-        <span><b>${p.equipos4 + p.partidos4}</b><small>1/4</small></span>
-        <span><b>${p.equipos2 + p.partidos2}</b><small>1/2</small></span>
-        <span><b>${p.equiposFinal + p.partidoFinal}</b><small>Final</small></span>
-      </div>
+      <strong>${p.puntos} pts</strong>
     </article>
   `).join("");
 }
 
-searchEl.addEventListener("input", e => {
-  const q = e.target.value.toLowerCase();
-  renderRanking(players.filter(p => p.name.toLowerCase().includes(q)));
-});
+function applyFilter() {
+  const q = clean(searchEl.value).toLowerCase();
+  const filtered = q ? players.filter(p => p.jugador.toLowerCase().includes(q)) : players;
+  renderRows(filtered);
+}
 
-loadExcel();
+async function loadRanking() {
+  try {
+    const url = `${cfg.EXCEL_FILE}?v=${Date.now()}`;
+    const response = await fetch(url, { cache: "no-store" });
+    if (!response.ok) throw new Error(`No puedo descargar ${cfg.EXCEL_FILE}. HTTP ${response.status}`);
+    const buffer = await response.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: "array" });
+    players = parseClas(workbook);
+    renderSummary(players);
+    renderPodium(players);
+    renderRows(players);
+    const updated = new Date().toLocaleString("es-ES", { dateStyle: "medium", timeStyle: "short" });
+    statusEl.textContent = `Actualizado · ${updated}`;
+  } catch (error) {
+    console.error(error);
+    statusEl.textContent = error.message;
+    statusEl.classList.add("status-pill--error");
+  }
+}
+
+searchEl.addEventListener("input", applyFilter);
+loadRanking();
