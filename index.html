@@ -4,31 +4,30 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Mundopanda 2026 | Clasificación</title>
-  <meta name="theme-color" content="#07152f" />
+  <meta name="theme-color" content="#081a3a" />
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=2026-modern-3" />
+  <link rel="stylesheet" href="styles.css?v=2026-final-1" />
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
-<body class="public-page">
-  <div class="stadium-lights"></div>
+<body>
   <main class="page-shell">
-    <section class="hero hero-worldcup">
-      <div class="hero__badge">Mundopanda · Mundial 2026</div>
-      <h1>Clasificación Mundial</h1>
-      <p class="subtitle">La batalla por levantar la copa empieza aquí.</p>
-      <div class="hero-actions">
-        <span class="status-pill" id="status">Cargando clasificación...</span>
-      </div>
+    <section class="hero">
+      <div class="hero__glow"></div>
+      <div class="eyebrow">FIFA World Cup 2026 · Mundopanda</div>
+      <h1>Clasificación Mundial 2026</h1>
+      <p class="subtitle">Ranking actualizado del concurso</p>
+      <div class="status-pill" id="status">Cargando clasificación...</div>
     </section>
 
     <section class="summary-grid" id="summaryGrid" aria-label="Resumen"></section>
+
     <section class="podium" id="podium" aria-label="Podio"></section>
 
     <section class="ranking-card">
       <div class="ranking-header">
         <div>
-          <p class="section-kicker">Tabla oficial</p>
           <h2>Clasificación general</h2>
+          <p>Datos leídos desde ranking.xlsx · hoja CLAS</p>
         </div>
         <input id="search" class="search" type="search" placeholder="Buscar jugador..." autocomplete="off" />
       </div>
@@ -53,7 +52,7 @@
       <div id="mobileCards" class="mobile-cards"></div>
     </section>
   </main>
-  <script src="config.js?v=2026-modern-3"></script>
-  <script src="app.js?v=2026-modern-3"></script>
+  <script src="config.js?v=2026-final-1"></script>
+  <script src="app.js?v=2026-final-1"></script>
 </body>
 </html>

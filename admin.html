@@ -3,33 +3,29 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mundopanda 2026 | Zona privada</title>
+  <title>Mundopanda 2026 | Admin</title>
   <meta name="robots" content="noindex,nofollow" />
-  <meta name="theme-color" content="#07152f" />
-  <link rel="stylesheet" href="styles.css?v=2026-modern-3" />
+  <meta name="theme-color" content="#081a3a" />
+  <link rel="stylesheet" href="styles.css?v=2026-final-1" />
 </head>
-<body class="admin-page">
-  <div class="stadium-lights"></div>
+<body>
   <main class="admin-shell">
     <section class="admin-panel">
-      <div class="hero__badge">Zona privada · Mundopanda 2026</div>
+      <div class="eyebrow">Zona privada · Mundopanda 2026</div>
       <h1>Actualizar clasificación</h1>
-      <p class="subtitle">Arrastra el Excel oficial o pulsa la zona de carga. No necesitas tocar GitHub.</p>
-      <div id="authState" class="status-pill">Comprobando acceso privado...</div>
-
-      <div id="dropzone" class="dropzone" role="button" tabindex="0" aria-label="Seleccionar fichero Excel">
-        <input id="fileInput" class="file-input" type="file" accept=".xlsx,.xlsm,.xls" />
-        <div class="dropzone__ball">⚽</div>
-        <strong id="dropTitle">Arrastra aquí el Excel</strong>
-        <span id="fileName" class="dropzone__filename">o pulsa para seleccionarlo</span>
-        <small>Se publicará como <b>ranking.xlsx</b> · hoja esperada <b>CLAS</b></small>
-      </div>
-
+      <p>Arrastra aquí el Excel actualizado o pulsa para seleccionarlo.</p>
+      <div id="authState" class="status-pill">Comprobando acceso...</div>
+      <label id="dropzone" class="dropzone" for="fileInput">
+        <input id="fileInput" type="file" accept=".xlsx,.xlsm,.xls" hidden />
+        <span class="dropzone__icon">🏆</span>
+        <strong>Subir ranking.xlsx</strong>
+        <small>Hoja esperada: CLAS</small>
+      </label>
       <button id="uploadBtn" class="primary-btn" disabled>Actualizar clasificación</button>
-      <div id="log" class="admin-log">Esperando fichero...</div>
+      <pre id="log" class="admin-log"></pre>
     </section>
   </main>
-  <script src="config.js?v=2026-modern-3"></script>
-  <script src="admin.js?v=2026-modern-3"></script>
+  <script src="config.js?v=2026-final-1"></script>
+  <script src="admin.js?v=2026-final-1"></script>
 </body>
 </html>
