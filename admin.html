@@ -3,34 +3,29 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mundopanda 2026 | Admin</title>
   <meta name="robots" content="noindex,nofollow" />
-  <title>Mundopanda 2026 | Zona privada</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta name="theme-color" content="#081a3a" />
+  <link rel="stylesheet" href="styles.css?v=2026-final-1" />
 </head>
-<body class="site admin-site">
-  <div class="orb orb-a"></div>
-  <div class="orb orb-b"></div>
+<body>
   <main class="admin-shell">
-    <section class="upload-card">
-      <div class="badge">Zona privada Mundopanda 2026</div>
+    <section class="admin-panel">
+      <div class="eyebrow">Zona privada · Mundopanda 2026</div>
       <h1>Actualizar clasificación</h1>
-      <p>Arrastra aquí el Excel oficial del concurso o pulsa el botón. La subida solo funciona con enlace privado autorizado.</p>
-
-      <div id="locked" class="status error" hidden>Acceso no autorizado. Usa el enlace privado de actualización.</div>
-
-      <label id="dropzone" class="dropzone">
-        <input id="fileInput" type="file" accept=".xlsx,.xlsm,.xls" />
-        <span class="upload-icon">🏆</span>
-        <strong>Arrastra el Excel aquí</strong>
-        <small>o pulsa para seleccionarlo</small>
+      <p>Arrastra aquí el Excel actualizado o pulsa para seleccionarlo.</p>
+      <div id="authState" class="status-pill">Comprobando acceso...</div>
+      <label id="dropzone" class="dropzone" for="fileInput">
+        <input id="fileInput" type="file" accept=".xlsx,.xlsm,.xls" hidden />
+        <span class="dropzone__icon">🏆</span>
+        <strong>Subir ranking.xlsx</strong>
+        <small>Hoja esperada: CLAS</small>
       </label>
-
-      <button id="uploadBtn" class="primary" disabled>Actualizar clasificación</button>
-      <div id="status" class="status">Esperando fichero...</div>
+      <button id="uploadBtn" class="primary-btn" disabled>Actualizar clasificación</button>
+      <pre id="log" class="admin-log"></pre>
     </section>
   </main>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="admin-config.js"></script>
-  <script src="admin.js"></script>
+  <script src="config.js?v=2026-final-1"></script>
+  <script src="admin.js?v=2026-final-1"></script>
 </body>
 </html>
