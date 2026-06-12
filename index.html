@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mundopanda 2026 | Clasificacion</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="site">
+  <div class="orb orb-a"></div>
+  <div class="orb orb-b"></div>
+  <header class="hero">
+    <nav class="topbar">
+      <div class="brand"><span class="ball">◉</span> MUNDOPANDA 2026</div>
+    </nav>
+    <section class="hero-grid">
+      <div>
+        <p class="eyebrow">Concurso Copa Mundial FIFA 2026</p>
+        <h1>Clasificacion mundialista en directo</h1>
+        <p class="subtitle">Ranking actualizado desde el Excel oficial. Podio, puntos por fase y detalle por participante.</p>
+        <div class="stats" id="stats"></div>
+      </div>
+      <div class="trophy-card" aria-hidden="true">
+        <div class="trophy">🏆</div>
+        <div class="ring ring-1"></div>
+        <div class="ring ring-2"></div>
+        <div class="pitch-lines"></div>
+      </div>
+    </section>
+  </header>
+
+  <main class="content">
+    <section class="podium-wrap">
+      <div class="section-title">
+        <p>Top 3</p>
+        <h2>El podio</h2>
+      </div>
+      <div class="podium" id="podium"></div>
+    </section>
+
+    <section class="ranking-panel">
+      <div class="panel-head">
+        <div>
+          <p class="mini">Ranking completo</p>
+          <h2>Clasificacion general</h2>
+        </div>
+        <input id="search" class="search" placeholder="Buscar participante..." autocomplete="off" />
+      </div>
+      <div id="ranking" class="ranking"></div>
+    </section>
+  </main>
+
+  <footer class="footer">Datos cargados desde <strong>ranking.xlsx</strong></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
